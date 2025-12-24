@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta property="og:title" content="酒津(銅) - 專用訂貨單">
+    <meta property="og:title" content="酒津(銅) - 專用電子落單表">
     <meta property="og:description" content="香港宏達有限公司提供">
-    
     <title>酒津(銅) - 專用訂貨單</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f8f9fa; padding-bottom: 120px; }
         .sticky-header-container { position: sticky; top: 0; z-index: 1020; background-color: #212529; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
@@ -19,7 +17,9 @@
         .nav-link { color: #aaa; font-weight: bold; border: none; border-radius: 10px 10px 0 0; padding: 10px 15px; font-size: 1rem; background: transparent; }
         .nav-link.active { background-color: #f8f9fa; color: #000; border-bottom: 4px solid #ffc107; }
         .search-section { background-color: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #ddd; display: none; }
-        .search-input { border-radius: 20px; border: 1px solid #ccc; padding: 8px 15px; width: 100%; }
+        .search-wrapper { position: relative; }
+        .search-input { border-radius: 20px; border: 1px solid #ccc; padding: 8px 35px 8px 15px; width: 100%; }
+        .btn-clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #adb5bd; cursor: pointer; font-size: 1.1rem; display: none; z-index: 10; }
         .cat-header { background-color: #ffc107; color: #000; font-weight: 800; padding: 8px 15px; margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #e0a800; }
         .product-row { background: white; border-bottom: 1px solid #eee; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .p-info { flex: 1; padding-right: 10px; overflow: hidden; }
@@ -46,119 +46,65 @@
         .btn-unit-select:hover { background-color: #f8f9fa; }
         .btn-unit-select.piece { border-color: #212529; color: #212529; }
         .btn-unit-select.kg { border-color: #d63384; color: #d63384; }
-        .btn-unit-select i { display: block; font-size: 1.5rem; margin-bottom: 5px; }
     </style>
 </head>
 <body>
-
 <div class="sticky-header-container">
     <div class="top-info d-flex justify-content-between align-items-center">
-        <div>
-            <div class="client-name" id="displayClientName">客戶名稱</div>
-            <div style="font-size: 0.8rem; color: #ccc;" id="displayClientCode">代碼</div>
-        </div>
-        <div style="text-align: right; font-size: 0.8rem; color: #ccc;">
-            宏達批發<br>Tel: 63771688
-        </div>
+        <div><div class="client-name">酒津(銅)</div><div style="font-size: 0.8rem; color: #ccc;">W3908</div></div>
+        <div style="text-align: right; font-size: 0.8rem; color: #ccc;">宏達批發<br>Tel: 63771688</div>
     </div>
     <ul class="nav nav-tabs">
-        <li class="nav-item" style="flex:1; text-align:center;">
-            <button class="nav-link active" style="width:100%" onclick="switchTab('frequent')">🌟 常用清單</button>
-        </li>
-        <li class="nav-item" style="flex:1; text-align:center;">
-            <button class="nav-link" style="width:100%" onclick="switchTab('all')">📋 全部產品</button>
-        </li>
+        <li class="nav-item" style="flex:1; text-align:center;"><button class="nav-link active" style="width:100%" onclick="switchTab('frequent')">🌟 常用清單</button></li>
+        <li class="nav-item" style="flex:1; text-align:center;"><button class="nav-link" style="width:100%" onclick="switchTab('all')">📋 全部產品</button></li>
     </ul>
     <div class="search-section" id="searchBar">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋產品 / 編號..." onkeyup="filterAllProducts()">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋產品 / 編號..." oninput="filterAllProducts()">
+            <i class="bi bi-x-circle-fill btn-clear-search" id="clearSearchBtn" onclick="clearSearch()"></i>
+        </div>
     </div>
 </div>
-
 <div id="tab-frequent" class="tab-content active"></div>
 <div id="tab-all" class="tab-content"></div>
-
 <div class="bottom-bar">
-    <div class="total-box">
-        共 <span id="totalQty" class="total-num">0</span> 件
-    </div>
-    <button id="viewCartBtn" class="btn-view-cart" onclick="openCartModal()" disabled>
-        <i class="bi bi-cart3"></i> 查看已選
-    </button>
-    <button class="btn-whatsapp" onclick="sendWhatsApp()">
-        <i class="bi bi-whatsapp"></i> 發送訂單
-    </button>
+    <div class="total-box">共 <span id="totalQty" class="total-num">0</span> 款</div>
+    <button id="viewCartBtn" class="btn-view-cart" onclick="openCartModal()" disabled><i class="bi bi-cart3"></i> 查看已選</button>
+    <button class="btn-whatsapp" onclick="sendWhatsApp()"><i class="bi bi-whatsapp"></i> 發送訂單</button>
 </div>
-
 <div class="modal fade" id="unitSelectionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">請選擇計價單位</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title">請選擇計價單位</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div>
             <div class="modal-body">
                 <p class="text-center mb-3">此產品支持稱重計價，請確認單位：</p>
                 <div class="unit-btn-group">
-                    <button id="btn-unit-piece" class="btn-unit-select piece" onclick="confirmUnit('piece')">
-                        <i class="bi bi-box-seam"></i>
-                        件 / 包<br>(默認)
-                    </button>
-                    <button class="btn-unit-select kg" onclick="confirmUnit('kg')">
-                        <i class="bi bi-speedometer2"></i>
-                        KG<br>(公斤)
-                    </button>
+                    <button id="btn-unit-piece" class="btn-unit-select piece" onclick="confirmUnit('piece')"><i class="bi bi-box-seam"></i> 件 / 包<br>(默認)</button>
+                    <button class="btn-unit-select kg" onclick="confirmUnit('kg')"><i class="bi bi-speedometer2"></i> KG<br>(公斤)</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">已選產品清單</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title">已選產品清單</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div>
             <div class="modal-body" id="cartModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-danger me-auto" onclick="clearCart()">
-                    <i class="bi bi-trash"></i> 清空
-                </button>
+                <button type="button" class="btn btn-outline-danger me-auto" onclick="clearCart()"><i class="bi bi-trash"></i> 清空</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">繼續選購</button>
                 <button type="button" class="btn btn-success" onclick="sendWhatsApp()">確認發送</button>
             </div>
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    // ==========================================
-    // ============ 客戶資料設定區域 =============
-    // ==========================================
-    
-    // 請在此處填入客戶名稱
-    const customerName = "酒津(銅)"; 
-    // 請在此處填入客戶編號
-    const customerCode = "W3908"; 
-    // 請在此處貼上常用清單代碼
-    const frequentCodes = [
-        "D10JA", "D09B", "E08AA", "E03F", "D82", 
-        "C09", "C09A", "A03", "D12", "D84", 
-        "C01CJ", "C28B", "D58A", "C43", "B14", 
-        "D04C", "M007", "D50B", "C27A", "D41AB", 
-        "C14G", "C10A", "D19E", "C20BA", "C51", 
-        "C70", "D30", "C04", "M008E", "D65", "D59EA"
-    ];
-
-    // ==========================================
-    // ========= 以下代碼請勿修改 (V5.3) =========
-    // ==========================================
-
-    const weightedProducts = ["D61B", "D61C", "D18A", "D17E", "D17C", "B01"];
-
+    const customerName = "酒津(銅)"; const customerCode = "W3908"; 
+    const frequentCodes = ["D10JA", "D09B", "E08AA", "E03F", "D82", "C09", "C09A", "A03", "D12", "D84", "C01CJ", "C28B", "D58A", "C43", "B14", "D04C", "M007", "D50B", "C27A", "D41AB", "C14G", "C10A", "D19E", "C20BA", "C51", "C70", "D30", "C04", "M008E", "D65", "D59EA"];
+    const eelProducts = ["D22J", "D22L", "D22", "D22C", "D22A", "D22D", "D22I", "D22G"];
+    const weightedProducts = ["D61B", "D61C", "D18A", "D17E", "D17C", "B01", "D18"];
     const fullCatalog = [
         { cat: "環球海膽", items: ["膠盒海膽 (A06F)", "加拿大海膽 (A03)", "澳洲海膽 (A08)", "練海膽醬 (C59)", "凍海膽漿 (D01)", "紫海膽(膠盒) (A07C)", "墨西哥海膽 (A12A)", "墨西哥海膽10格 (A12B)", "本地海膽 (A02)", "凍熟馬糞膽 (A06E)"] },
         { cat: "日本海膽", items: ["A Grade(直排) (AJ1)", "A Grade(亂排) (AJ4)", "B Grade(亂排) (AJ3)", "鹽水海膽 (AJ6)"] },
@@ -177,7 +123,7 @@
         { cat: "急凍海產類--2", items: ["原隻魷魚桶26/30 (D39D)", "原隻魷魚桶(獨立) (D39DA)", "阿根廷魷魚一夜干 (D39HA)", "銀鱈魚5-7磅 (D26)", "韓國半殼蠔 (F01DB)", "急凍殼付生蠔(刺身級) (F01GB)", "原味無骨魚塊 (D61HC)", "日本魷魚一夜干(2隻裝) (D39H)", "煙三文魚500g (D80A)", "煙三文魚100g (D80AA)", "急凍三文魚柳 (D80C)"] },
         { cat: "急凍海產類--3", items: ["多春魚 (D21BA)", "生龍蝦尾 (D71)", "有頭虎蝦 4/6 (D03LEB)", "有頭虎蝦 6/8 (D03LEA)", "有頭虎蝦 8/10 (D03LE)", "有頭虎蝦 13/15 (D03LC)", "有頭虎蝦 16/20 (D03LCA)", "原隻熟蝦 (D03MB)", "天婦羅蝦5L (D10ED)", "急凍熟波斯頓龍蝦 (D70)", "蝦仁磚21/25 (D03LJ)", "蝦仁磚70/90 (D03LK)", "無頭虎蝦16/20 (D03LB)"] },
         { cat: "急凍海產類--4", items: ["熟帝皇蟹腳4L (D72CA)", "生帝皇蟹腳4L (D72C)", "竹田螃蟹醬 (C58)", "越河蟹肉味噌 (C58AB)", "越河蟹蓋 (C58AC)", "松葉蟹肉碎 (D59D)", "軟殼蟹(少冰，約8隻) (D12)", "龍蝦味噌 (C58A)", "混合鱈蟹肉500g (D59H)", "軟殼蟹(少冰，約9隻) (D12A)", "二本爪M (D60G)", "二本爪L (D60H)", "熟蟹拐棒500g (D72EC)", "熟雪蟹棒肉L (D72ED)", "罐頭蟹肉CLAW (D59EA)"] },
-        { cat: "肉類1", items: ["手羽明太子雞翼 (E03)", "手羽芝士豬肉雞翼 (E03A)", "生雞膝軟骨粒 (D88C)", "芝麻雞翼 (E03F)", "明太子雞翼（日本） (E03K)", "無激素雞扒 (M008C)", "日式炭燒雞扒 (E03JA)", "煙鴨胸 (D76A)", "雞扒 (M008E)", "雞中翼 (M008D)", "華味鳥雞腎 (D88GA)", "華味鳥雞心肝 (D88GB)", "CP炸雞軟骨粒1kg (D88DA)", "鹽酥雞 (E11C)", "雞骨腸 (E02)"] },
+        { cat: "肉類1", items: ["手羽明太子雞翼 (E03)", "手羽芝士豬肉雞翼 (E03A)", "生雞膝軟骨粒 (D88C)", "芝麻雞翼 (E03F)", "明太子雞翼（日本） (E03K)", "無激素雞扒 (M008C)", "日式炭燒雞扒 (E03JA)", "煙鴨胸 (D76A)", "巴西雞扒 (M008E)", "雞中翼 (M008D)", "華味鳥雞腎 (D88GA)", "華味鳥雞心肝 (D88GB)", "CP炸雞軟骨粒1kg (D88DA)", "鹽酥雞 (E11C)", "雞骨腸 (E02)"] },
         { cat: "肉類2", items: ["免治雞肉棒 (D88AD)", "開邊生雞翼串 (D88E)", "炭燒雞腿肉串（盒裝） (D88A)", "秘制五花腩串（碟裝） (D88FG)", "秘制雞皮串（碟裝） (D88FD)", "雞腿肉串（碟裝） (D88FE)", "雞軟骨串 (D88)", "生雞皮串（盒裝） (D88AB)", "生雞腎串(盒裝) (D88AC)", "秘制肥腸（碟裝） (D88FB)", "雞腎串（碟裝） (D88FF)", "羊肉串（碟裝） (D88FH)", "雞亦串（碟裝） (D88FC)"] },
         { cat: "肉類3", items: ["中國鵝肝 (D30)", "原隻紅酒鵝肝 (D30A)", "鵝肝片 (D30D)", "金磚鵝肝片（紅酒味） (D30E)", "一口牛肉粒 (M004)", "和牛漢堡扒 (H02AA)", "和牛腿肉片 (M003M)", "A4和牛肉眼扒 (M003LA)", "A4和牛肉眼（抄碼） (M003LAA)", "中國鴨肝 (D30B)", "美國肥牛片2K裝 (M003BD)", "巴西牛舌(直條) (M007)", "A4和牛西冷扒 (M003LB)", "A4和牛西冷（抄碼） (M003LBA)"] },
         { cat: "肉類4", items: ["黑豚肉眼（日本） (M006B)", "內蒙古法式羊扒 (M010)", "一口豚肉 (M004B)", "杜洛克風乾火腿片 (D99)", "日式叉燒 (E06)", "日式芝士漢堡扒60g (H02A)", "豬軟骨 (E05)", "日式漢堡扒 (H02)", "煙肉片 (D76B)", "日式叉燒片 (E06A)", "豚肉片2K裝 (M010A)", "雞骨腸 (E02)", "香芋地瓜丸 (C30C)", "炸魷魚圈 (D41C)", "日式叉燒片 (E06A)"] },
@@ -189,266 +135,72 @@
         { cat: "漬物", items: ["壽司紅薑 (C27)", "壽司白薑 (C27A)", "牛蒡醬油漬 (C31B)", "薑芽(30本) (C27B)", "海葡萄100g (D81A)", "青雞冠草 (C09)", "泡菜（400g） (C87B)", "大L蘿白 (C31)", "味噌蒜頭漬 (C31C)", "紅雞冠草 (C09A)", "味付筍 (C31D)", "青海草 (C10AA)"] },
         { cat: "伴碟/乾貨/工具", items: ["軍艦紫菜50片 (C18A)", "壽司紫菜50片 (C18C)", "神戶切絲紫菜 (C18E)", "單翼手捲海苔 (C18F)", "日出昆布 (C57)", "碎海草 (C10A)", "海苔粉 (C18G)", "紫菜杯 (C18J)", "日高昆布 (C57A)", "山形膠葉 (C01B)", "櫻花蝦乾500g (C03)", "櫻花蝦乾90g (C03A)", "醫用丁晴手套 S (C50BA)", "醫用丁晴手套 M (C50BB)", "醫用丁晴手套 L (C50BC)", "保鮮綿紙M (C70)", "914保鮮紙 (C914SC)", "912保鮮紙 (C912SC)", "910保鮮紙 (C910SC)", "613錫紙 (C613)", "3寸木皮船 (C04C)", "手套S (C50AA)", "手套M (C50AB)", "天婦羅紙 (C43A)", "木盒 (C07)", "細木盒 (C07A)", "日本JFDA消毒酒精 (C50D)"] }
     ];
-
-    let productMap = {};
-    let cart = {}; 
-    let cartUnits = {}; 
-    let cartModal = null; 
-    let unitModal = null; 
-    let pendingProductCode = null; 
-
+    let productMap = {}, cart = {}, cartUnits = {}, cartModal = null, unitModal = null, pendingProductCode = null;
     function init() {
-        // 設定網頁標題
-        document.getElementById('displayClientName').innerText = customerName;
-        document.getElementById('displayClientCode').innerText = customerCode;
-        document.title = customerName + " - 專用訂貨單";
-
-        fullCatalog.forEach(cat => {
-            cat.items.forEach(itemStr => {
-                const match = itemStr.match(/^(.*)\s*\(([A-Za-z0-9]+)\)$/);
-                if (match) {
-                    const name = match[1]; 
-                    const code = match[2]; 
-                    productMap[code] = { fullName: itemStr, name: name, code: code };
-                }
-            });
+        productMap = {}; 
+        fullCatalog.forEach(c=>{c.items.forEach(i=>{const m=i.match(/^(.*)\s*\(([A-Za-z0-9]+)\)$/);if(m)productMap[m[2]]={fullName:i,name:m[1],code:m[2]}})});
+        renderFrequent(); renderAll();
+        cartModal=new bootstrap.Modal(document.getElementById('cartModal')); unitModal=new bootstrap.Modal(document.getElementById('unitSelectionModal'));
+    }
+    function switchTab(t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');event.target.classList.add('active');if(t==='all'){clearSearch();document.getElementById('searchBar').style.display='block';window.scrollTo(0,0)}else{document.getElementById('searchBar').style.display='none'}}
+    function renderFrequent(){const c=document.getElementById('tab-frequent');let h='';frequentCodes.forEach(code=>{const p=productMap[code];h+=p?createProductRow(p.fullName):createProductRow(code+' (未知)')});c.innerHTML=h}
+    function renderAll(f=''){const c=document.getElementById('tab-all');let h='';const t=f.toUpperCase().split('');fullCatalog.forEach(cat=>{const items=cat.items.filter(i=>{if(!f)return true;const u=i.toUpperCase();return t.every(x=>u.includes(x))});if(items.length>0){if(!f)h+=`<div class="cat-header">${cat.cat}</div>`;items.forEach(i=>h+=createProductRow(i))}});if(h==='')h='<div class="text-center p-5 text-muted">找不到相關產品</div>';c.innerHTML=h}
+    function createProductRow(s){
+        let n=s,c='UNKNOWN';const m=s.match(/^(.*)\s*\(([A-Za-z0-9]+)\)$/);if(m){n=m[1];c=m[2]}else{c=s.replace(/[^a-zA-Z0-9]/g,'')}
+        const q=cart[c]||0; let val=q, cls='qty-input'; if(q>0&&cartUnits[c]==='kg'){val+=' K';cls+=' unit-kg'}
+        const sel=q>0?'selected':'';
+        return `<div class="product-row ${sel}" id="row-${c}"><div class="p-info"><div class="p-name">${n}</div><div class="p-code">${c}</div></div><div class="qty-control"><div class="qty-btn" onclick="updateQty('${c}',-1)">-</div><input type="text" class="${cls}" id="qty-${c}" value="${val}" readonly><div class="qty-btn" onclick="updateQty('${c}',1)">+</div></div></div>`
+    }
+    function filterAllProducts(){const v=document.getElementById('searchInput').value;document.getElementById('clearSearchBtn').style.display=v.length?'block':'none';renderAll(v)}
+    function clearSearch(){document.getElementById('searchInput').value='';document.getElementById('clearSearchBtn').style.display='none';renderAll('')}
+    function updateQty(c,d){
+        if(eelProducts.includes(c)){
+            if(d>0&&(!cart[c]||cart[c]===0)){cart[c]=5;cartUnits[c]='kg'}else{if(!cart[c])cart[c]=0;cart[c]+=d*5}
+            if(cart[c]<=0){delete cart[c];delete cartUnits[c]}
+            syncUI(c); return;
+        }
+        if(d>0&&(!cart[c]||cart[c]===0)&&weightedProducts.includes(c)&&!cartUnits[c]){
+            pendingProductCode=c;
+            const btn=document.getElementById('btn-unit-piece');
+            btn.innerHTML=(c==='B01')?'<i class="bi bi-box-seam"></i> 隻<br>(默認)':'<i class="bi bi-box-seam"></i> 件 / 包<br>(默認)';
+            unitModal.show(); return;
+        }
+        if(!cart[c])cart[c]=0; cart[c]+=d;
+        if(cart[c]<=0){delete cart[c];delete cartUnits[c]}
+        syncUI(c);
+    }
+    function confirmUnit(u){if(pendingProductCode){cartUnits[pendingProductCode]=u;updateQty(pendingProductCode,1);unitModal.hide();pendingProductCode=null}}
+    function syncUI(c){
+        const q=cart[c]||0, u=cartUnits[c];
+        document.querySelectorAll(`#qty-${c}`).forEach(i=>{
+            i.className='qty-input'+(u==='kg'?' unit-kg':'');
+            i.value=q+(u==='kg'?' K':'');
+            const r=i.closest('.product-row');
+            if(r&&!r.classList.contains('modal-row')){q>0?r.classList.add('selected'):r.classList.remove('selected')}
         });
-
-        renderFrequent();
-        renderAll();
-        cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
-        unitModal = new bootstrap.Modal(document.getElementById('unitSelectionModal')); 
+        calcTotal(); if(document.getElementById('cartModal').classList.contains('show'))renderCartModalItems();
     }
-
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-        event.target.classList.add('active');
-        const searchBar = document.getElementById('searchBar');
-        if (tab === 'all') {
-            searchBar.style.display = 'block';
-            window.scrollTo(0, 0); 
-        } else {
-            searchBar.style.display = 'none';
-        }
+    function clearCart(){if(Object.keys(cart).length===0)return;if(confirm("確定要清空所有已選貨品嗎？")){cart={};cartUnits={};renderFrequent();renderAll();calcTotal();renderCartModalItems()}}
+    function calcTotal(){
+        const count=Object.keys(cart).length; document.getElementById('totalQty').innerText=count;
+        const b=document.getElementById('viewCartBtn');
+        if(count>0){b.classList.add('active');b.disabled=false;b.innerHTML=`<i class="bi bi-cart-check-fill"></i> 查看已選 (${count})`}else{b.classList.remove('active');b.disabled=true;b.innerHTML=`<i class="bi bi-cart3"></i> 查看已選`}
     }
-
-    function renderFrequent() {
-        const container = document.getElementById('tab-frequent');
-        let html = '';
-        frequentCodes.forEach(code => {
-            const product = productMap[code];
-            if (product) {
-                html += createProductRow(product.fullName);
-            } else {
-                html += createProductRow(`${code} (未知產品)`);
-            }
-        });
-        container.innerHTML = html;
+    function openCartModal(){renderCartModalItems();cartModal.show()}
+    function renderCartModalItems(){
+        const c=document.getElementById('cartModalBody');
+        if(Object.keys(cart).length===0){c.innerHTML='<div class="text-center p-4 text-muted">尚未選擇任何產品</div>';return}
+        let h=''; for(let k in cart){const p=productMap[k];h+=createProductRow(p?p.fullName:`${k} (未知)`);} c.innerHTML=h;
     }
-
-    function renderAll(filterText = "") {
-        const container = document.getElementById('tab-all');
-        let html = '';
-        fullCatalog.forEach(category => {
-            const filteredItems = category.items.filter(item => {
-                if (!filterText) return true;
-                return item.toUpperCase().includes(filterText.toUpperCase()) || category.cat.includes(filterText);
-            });
-            if (filteredItems.length > 0) {
-                if (!filterText) {
-                    html += `<div class="cat-header">${category.cat}</div>`;
-                }
-                filteredItems.forEach(itemStr => {
-                    html += createProductRow(itemStr);
-                });
-            }
-        });
-        if (html === '') {
-            html = '<div class="text-center p-5 text-muted">找不到相關產品</div>';
-        }
-        container.innerHTML = html;
+    function sendWhatsApp(){
+        if(Object.keys(cart).length===0){alert("請先選擇產品！");return}
+        let msg=`${customerCode} ${customerName}\n訂貨單：\n\n`;
+        const fmt=c=>{const p=productMap[c];const n=p?p.name:c;let q=cart[c].toString();if(cartUnits[c]==='kg')q+='K';return ` ${q.padEnd(5,' ')} ${n} (${c})\n`};
+        frequentCodes.forEach(c=>{if(cart[c])msg+=fmt(c)});
+        for(let c in cart){if(!frequentCodes.includes(c))msg+=fmt(c)}
+        window.open(`https://wa.me/85263771688?text=${encodeURIComponent(msg)}`,'_blank');
     }
-
-    function createProductRow(itemStr) {
-        let code = "UNKNOWN";
-        let displayName = itemStr;
-        const match = itemStr.match(/^(.*)\s*\(([A-Za-z0-9]+)\)$/);
-        if (match) {
-            displayName = match[1];
-            code = match[2];
-        } else {
-            code = itemStr.replace(/[^a-zA-Z0-9]/g, ''); 
-        }
-        const qty = cart[code] || 0;
-        const rowClass = qty > 0 ? 'selected' : '';
-        let displayValue = qty;
-        let inputClass = 'qty-input';
-        if (qty > 0 && cartUnits[code] === 'kg') {
-            displayValue = qty + ' kg';
-            inputClass += ' unit-kg';
-        }
-        return `
-        <div class="product-row ${rowClass}" id="row-${code}">
-            <div class="p-info">
-                <div class="p-name">${displayName}</div>
-                <div class="p-code">${code}</div>
-            </div>
-            <div class="qty-control">
-                <div class="qty-btn" onclick="updateQty('${code}', -1)">-</div>
-                <input type="text" class="${inputClass}" id="qty-${code}" value="${displayValue}" readonly>
-                <div class="qty-btn" onclick="updateQty('${code}', 1)">+</div>
-            </div>
-        </div>`;
-    }
-
-    function filterAllProducts() {
-        const text = document.getElementById('searchInput').value;
-        renderAll(text);
-    }
-
-    function updateQty(code, delta) {
-        if (delta > 0 && (!cart[code] || cart[code] === 0) && weightedProducts.includes(code) && !cartUnits[code]) {
-            pendingProductCode = code;
-            const pieceBtn = document.getElementById('btn-unit-piece');
-            if (code === 'B01') {
-                pieceBtn.innerHTML = '<i class="bi bi-box-seam"></i> 隻<br>(默認)';
-            } else {
-                pieceBtn.innerHTML = '<i class="bi bi-box-seam"></i> 件 / 包<br>(默認)';
-            }
-            unitModal.show();
-            return;
-        }
-        if (!cart[code]) cart[code] = 0;
-        cart[code] += delta;
-        if (cart[code] <= 0) {
-            delete cart[code];
-            delete cartUnits[code];
-        }
-        updateInputDisplay(code);
-        calculateTotal();
-        if (document.getElementById('cartModal').classList.contains('show')) {
-             renderCartModalItems();
-        }
-    }
-
-    function confirmUnit(unit) {
-        if (pendingProductCode) {
-            cartUnits[pendingProductCode] = unit;
-            updateQty(pendingProductCode, 1);
-            unitModal.hide();
-            pendingProductCode = null;
-        }
-    }
-
-    function updateInputDisplay(code) {
-        const inputs = document.querySelectorAll(`input[id='qty-${code}']`);
-        const qty = cart[code] || 0;
-        const unit = cartUnits[code];
-        inputs.forEach(input => {
-            if (qty === 0) {
-                input.value = 0;
-                input.classList.remove('unit-kg');
-            } else {
-                if (unit === 'kg') {
-                    input.value = qty + ' kg';
-                    input.classList.add('unit-kg');
-                } else {
-                    input.value = qty;
-                    input.classList.remove('unit-kg');
-                }
-            }
-            const row = input.closest('.product-row');
-            if (row && !row.classList.contains('modal-row')) {
-                if (qty > 0) row.classList.add('selected');
-                else row.classList.remove('selected');
-            }
-        });
-    }
-
-    function clearCart() {
-        if (Object.keys(cart).length === 0) return;
-        if (!confirm("確定要清空所有已選貨品嗎？")) return;
-        cart = {}; 
-        cartUnits = {}; 
-        document.querySelectorAll('.qty-input').forEach(input => {
-            input.value = 0;
-            input.classList.remove('unit-kg');
-        });
-        document.querySelectorAll('.product-row').forEach(row => row.classList.remove('selected'));
-        calculateTotal();
-        renderCartModalItems(); 
-    }
-
-    function calculateTotal() {
-        let count = 0;
-        for (let key in cart) {
-            count += cart[key];
-        }
-        document.getElementById('totalQty').innerText = count;
-        const viewBtn = document.getElementById('viewCartBtn');
-        if (count > 0) {
-            viewBtn.classList.add('active');
-            viewBtn.disabled = false;
-            viewBtn.innerHTML = `<i class="bi bi-cart-check-fill"></i> 查看已選 (${count})`;
-        } else {
-            viewBtn.classList.remove('active');
-            viewBtn.disabled = true;
-            viewBtn.innerHTML = `<i class="bi bi-cart3"></i> 查看已選`;
-        }
-    }
-
-    function openCartModal() {
-        renderCartModalItems();
-        cartModal.show();
-    }
-
-    function renderCartModalItems() {
-        const container = document.getElementById('cartModalBody');
-        let html = '';
-        if (Object.keys(cart).length === 0) {
-            html = '<div class="text-center p-4 text-muted">尚未選擇任何產品</div>';
-        } else {
-            for (let code in cart) {
-                const product = productMap[code];
-                const fullName = product ? product.fullName : `${code} (未知)`;
-                html += createProductRow(fullName);
-            }
-        }
-        container.innerHTML = html;
-    }
-
-    function sendWhatsApp() {
-        if (Object.keys(cart).length === 0) {
-            alert("請先選擇產品！");
-            return;
-        }
-        let msg = `${customerCode} ${customerName}\n訂貨單：\n\n`;
-        const formatLine = (code) => {
-            const name = productMap[code] ? productMap[code].name : code;
-            let qtyStr = cart[code];
-            if (cartUnits[code] === 'kg') {
-                qtyStr += 'K'; 
-            }
-            return ` ${qtyStr}   ${name}\n`;
-        };
-        frequentCodes.forEach(code => {
-            if (cart[code]) {
-                msg += formatLine(code);
-            }
-        });
-        for (let code in cart) {
-            if (!frequentCodes.includes(code)) {
-                msg += formatLine(code);
-            }
-        }
-        const url = `https://wa.me/85263771688?text=${encodeURIComponent(msg)}`;
-        window.open(url, '_blank');
-    }
-
     init();
 </script>
-
 </body>
 </html>
